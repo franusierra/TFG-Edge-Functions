@@ -1,0 +1,57 @@
+---
+apiVersion: openfaas.com/v1
+kind: Function
+metadata:
+  name: temperature
+  namespace: tfg-edge
+spec:
+  name: temperature
+  image: franusi/function-temperature:latest
+  environment:
+    alarm_lower_limit: "35.5"
+    alarm_upper_limit: "38"
+    influx_host: influxdb
+    influx_port: "8086"
+    mosquitto_broker: mosquitto
+  annotations: 
+    topic: clinic/sensors/temperature
+  secrets:
+  - influxdb-auth
+---
+apiVersion: openfaas.com/v1
+kind: Function
+metadata:
+  name: blood-oxygen
+  namespace: tfg-edge
+spec:
+  name: blood-oxygen
+  image: franusi/function-blood-oxygen:latest
+  environment:
+    alarm_lower_limit: "90"
+    influx_host: influxdb
+    influx_port: "8086"
+    mosquitto_broker: mosquitto
+  annotations: 
+    topic: clinic/sensors/oxymeter
+  secrets:
+  - influxdb-auth
+---
+apiVersion: openfaas.com/v1
+kind: Function
+metadata:
+  name: heartbeat
+  namespace: tfg-edge
+spec:
+  name: heartbeat
+  image: franusi/function-heartbeat:latest
+  environment:
+    alarm_lower_limit: "40"
+    alarm_upper_limit: "100"
+    influx_host: influxdb
+    influx_port: "8086"
+    mosquitto_broker: mosquitto
+  annotations: 
+    topic: clinic/sensors/heartbeat
+  secrets:
+  - influxdb-auth
+

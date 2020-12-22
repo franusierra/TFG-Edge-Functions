@@ -1,0 +1,67 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+  
+functions:
+  blood-oxygen:
+    lang: python3
+    handler: ./functions/blood-oxygen
+    image: franusi/function-blood-oxygen:latest
+    namespace: tfg-edge
+    environment:
+      mosquitto_broker: mosquitto
+      influx_host: "influxdb"
+      influx_port: "8086"
+      alarm_lower_limit: "90"
+    annotations: 
+      topic: clinic/sensors/oxymeter
+    secrets:
+      - influxdb-auth
+  heartbeat:
+    lang: python3
+    handler: ./functions/heartbeat
+    image: franusi/function-heartbeat:latest
+    namespace: tfg-edge
+    environment:
+      mosquitto_broker: mosquitto
+      influx_host: "influxdb"
+      influx_port: "8086"
+      alarm_lower_limit: "40"
+      alarm_upper_limit: "100"
+    annotations: 
+      topic: clinic/sensors/heartbeat
+    secrets:
+      - influxdb-auth
+  temperature:
+    lang: python3
+    handler: ./functions/temperature
+    image: franusi/function-temperature:latest
+    namespace: tfg-edge
+    environment:
+      mosquitto_broker: mosquitto
+      influx_host: "influxdb"
+      influx_port: "8086"
+      alarm_lower_limit: "35.5"
+      alarm_upper_limit: "38"
+    annotations: 
+      topic: clinic/sensors/temperature
+    secrets:
+      - influxdb-auth
+  aggregation:
+    lang: python3
+    handler: ./functions/cloud-aggregation
+    image: franusi/function-aggregation:latest
+    namespace: tfg-edge
+    environment:
+      clinic_name: "clinicedge"
+      influx_host_local: "influxdb"
+      influx_port_local: "8086"
+      influx_host_cloud: "cloudaggregation.ddns.net"
+      influx_port_cloud: "8086"
+    annotations: 
+      topic: cron-function
+      schedule: "*/15 * * * *"
+    secrets:
+      - influxdb-auth
+      - influxdb-cloud-auth
