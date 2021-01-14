@@ -13,6 +13,13 @@ def handle(req):
     """
     data = json.loads(req)
     
+    
+    # Get the name of the clinic
+    clinic_name = os.getenv("clinic_name")
+    
+    # Get the duration of the data for the points
+    retention_policy= os.getenv("retention_policy")
+
     # Get influxdb host and credentials
     influx_host = os.getenv("influx_host")
     influx_port = os.getenv("influx_port")
@@ -40,10 +47,10 @@ def handle(req):
         # Send the alarm through mqtt
         sendAlarmMQTT(broker_address,data,current_time_milis,alarm_limit)
         # Write the event point to the alarm events measurement
-        influx_client.write_points([createAlarmEventPoint(data,current_time)])
+        influx_client.write_points([createAlarmEventPoint(data,current_time,clinic_name)],retention_policy=retention_policy)
 
     # Finally, write the point to the blood oxygen measurement
-    res=influx_client.write_points([createBloodOxygenPoint(data,current_time)])
+    res=influx_client.write_points([createBloodOxygenPoint(data,current_time,clinic_name)],retention_policy=retention_policy)
 
     return json.dumps(res)
 
@@ -68,12 +75,12 @@ def sendAlarmMQTT(broker_address,data,current_time,lower_limit):
     rc=mqtt_client.publish("clinic/alarms/blood-oxygen",mqtt_message)
     rc.wait_for_publish()
 
-def createBloodOxygenPoint(data,current_time):
+def createBloodOxygenPoint(data,current_time,clinic_name):
     return {
         "measurement":"blood-oxygen",
         "tags":{
             "patient-id":data["patient-id"],
-            "clinic":"test-clinic"
+            "clinic":clinic_name
         },
         "time":current_time,
         "fields" :{
@@ -81,12 +88,12 @@ def createBloodOxygenPoint(data,current_time):
         }
     }
 
-def createAlarmEventPoint(data,current_time):
+def createAlarmEventPoint(data,current_time,clinic_name):
     return {
         "measurement":"alarm",
         "tags":{
             "patient-id":data["patient-id"],
-            "clinic":"test-clinic"
+            "clinic":clinic_name
         },
         "time":current_time,
         "fields":{

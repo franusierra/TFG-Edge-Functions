@@ -54,27 +54,15 @@ def get_file(path):
         f.close()
     return v.strip()
 
-def createAggregationPoint(current_time,clinic_name,blood_oxygen_count,temperature_count,heartbeat_count):
-    return {
-        "measurement":"aggregation",
-        "tags":{},
-        "time":current_time,
-        "fields" :{
-            "clinic-name": clinic_name,
-            "blood_oxygen_count": blood_oxygen_count,
-            "temperature_count": temperature_count,
-            "heartbeat_count": heartbeat_count
-        }
-    }
 def transformEventPoint(data):
     return {
         "measurement":"alarm",
         "tags":{
+           "patient-id":data["patient-id"],
            "clinic":data["clinic"]
         },
         "time": data["time"],
         "fields":{
-            "patient-id":data["patient-id"],
             "type":data["type"],
             "meassured-value":float(data["meassured-value"])
         }
