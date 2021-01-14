@@ -47,10 +47,10 @@ def handle(req):
         # Send the alarm through mqtt
         sendAlarmMQTT(broker_address,data,current_time_milis,alarm_lower_limit,alarm_upper_limit)
         # Write the event point to the alarm events measurement
-        influx_client.write_points([createAlarmEventPoint(data,current_time,clinic_name)],retention_policy=retention_policy)
+        influx_client.write_points([createAlarmEventPoint(data,current_time,clinic_name)])
 
     # Finally, write the point to the temperature measurement
-    res=influx_client.write_points([createTemperaturePoint(data,current_time,clinic_name)],retention_policy=retention_policy)
+    res=influx_client.write_points([createTemperaturePoint(data,current_time,clinic_name)])
 
     return json.dumps(res)
 

@@ -10,11 +10,11 @@ functions:
     image: franusi/function-blood-oxygen:latest
     namespace: tfg-edge
     environment:
+      clinic_name: "edge-clinic"
       mosquitto_broker: mosquitto
       influx_host: "influxdb"
       influx_port: "8086"
       alarm_lower_limit: "90"
-      retention_policy: "1d"
     annotations: 
       topic: clinic/sensors/oxymeter
     secrets:
@@ -25,12 +25,12 @@ functions:
     image: franusi/function-heartbeat:latest
     namespace: tfg-edge
     environment:
+      clinic_name: "edge-clinic"
       mosquitto_broker: mosquitto
       influx_host: "influxdb"
       influx_port: "8086"
       alarm_lower_limit: "40"
       alarm_upper_limit: "100"
-      retention_policy: "1d"
     annotations: 
       topic: clinic/sensors/heartbeat
     secrets:
@@ -41,12 +41,12 @@ functions:
     image: franusi/function-temperature:latest
     namespace: tfg-edge
     environment:
+      clinic_name: "edge-clinic"
       mosquitto_broker: mosquitto
       influx_host: "influxdb"
       influx_port: "8086"
       alarm_lower_limit: "35.5"
       alarm_upper_limit: "38"
-      retention_policy: "1d"
     annotations: 
       topic: clinic/sensors/temperature
     secrets:
@@ -57,7 +57,7 @@ functions:
     image: franusi/alarms-upload:latest
     namespace: tfg-edge
     environment:
-      clinic_name: "clinicedge"
+      clinic_name: "edge-clinic"
       influx_host_local: "influxdb"
       influx_port_local: "8086"
       influx_host_cloud: "cloudaggregation.ddns.net"
