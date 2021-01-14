@@ -74,11 +74,11 @@ def createTemperaturePoint(data,current_time):
     return {
         "measurement":"temperature",
         "tags":{
-            "clinic":"test-clinic"
+            "clinic":"test-clinic",
+            "patient-id":data["patient-id"]
         },
         "time":current_time,
         "fields" :{
-            "patient-id":data["patient-id"],
             "value":float(data["measured-value"])
         }
     }
@@ -87,11 +87,11 @@ def createAlarmEventPoint(data,current_time):
     return {
         "measurement":"alarm",
         "tags":{
-           "clinic":"test-clinic"
+           "clinic":"test-clinic",
+           "patient-id":data["patient-id"]
         },
         "time":current_time,
         "fields":{
-            "patient-id":data["patient-id"],
             "type":"temperature",
             "meassured-value":float(data["measured-value"])
         }

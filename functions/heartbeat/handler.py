@@ -13,6 +13,12 @@ def handle(req):
     """
     data = json.loads(req)
     
+    # Get the name of the clinic
+    clinic_name = os.getenv("clinic_name")
+    
+    # Get the duration of the data for the points
+    retention_policy= os.getenv("retention_policy")
+    
     # Get influxdb host and credentials
     influx_host = os.getenv("influx_host")
     influx_port = os.getenv("influx_port")
@@ -74,11 +80,11 @@ def createHeartbeatPoint(data,current_time):
     return {
         "measurement":"heartbeat",
         "tags":{
+            "patient-id":data["patient-id"],
             "clinic":"test-clinic"
         },
         "time":current_time,
         "fields" :{
-            "patient-id":data["patient-id"],
             "value":float(data["measured-value"])
         }
     }
@@ -87,11 +93,11 @@ def createAlarmEventPoint(data,current_time):
     return {
         "measurement":"alarm",
         "tags":{
+           "patient-id":data["patient-id"],
            "clinic":"test-clinic"
         },
         "time":current_time,
         "fields":{
-            "patient-id":data["patient-id"],
             "type":"heartbeat",
             "meassured-value":float(data["measured-value"])
         }

@@ -72,11 +72,11 @@ def createBloodOxygenPoint(data,current_time):
     return {
         "measurement":"blood-oxygen",
         "tags":{
+            "patient-id":data["patient-id"],
             "clinic":"test-clinic"
         },
         "time":current_time,
         "fields" :{
-            "patient-id":data["patient-id"],
             "value":float(data["measured-value"])
         }
     }
@@ -85,11 +85,11 @@ def createAlarmEventPoint(data,current_time):
     return {
         "measurement":"alarm",
         "tags":{
-           "clinic":"test-clinic"
+            "patient-id":data["patient-id"],
+            "clinic":"test-clinic"
         },
         "time":current_time,
         "fields":{
-            "patient-id":data["patient-id"],
             "type":"blood-oxygen",
             "meassured-value":float(data["measured-value"])
         }

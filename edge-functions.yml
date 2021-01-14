@@ -14,6 +14,7 @@ functions:
       influx_host: "influxdb"
       influx_port: "8086"
       alarm_lower_limit: "90"
+      retention_policy: "1d"
     annotations: 
       topic: clinic/sensors/oxymeter
     secrets:
@@ -29,6 +30,7 @@ functions:
       influx_port: "8086"
       alarm_lower_limit: "40"
       alarm_upper_limit: "100"
+      retention_policy: "1d"
     annotations: 
       topic: clinic/sensors/heartbeat
     secrets:
@@ -44,14 +46,15 @@ functions:
       influx_port: "8086"
       alarm_lower_limit: "35.5"
       alarm_upper_limit: "38"
+      retention_policy: "1d"
     annotations: 
       topic: clinic/sensors/temperature
     secrets:
       - influxdb-auth
-  aggregation:
+  alarms-upload:
     lang: python3
-    handler: ./functions/cloud-aggregation
-    image: franusi/function-aggregation:latest
+    handler: ./functions/alarms-upload
+    image: franusi/alarms-upload:latest
     namespace: tfg-edge
     environment:
       clinic_name: "clinicedge"
@@ -61,7 +64,7 @@ functions:
       influx_port_cloud: "8086"
     annotations: 
       topic: cron-function
-      schedule: "*/15 * * * *"
+      schedule: "*/30 * * * *"
     secrets:
       - influxdb-auth
       - influxdb-cloud-auth
