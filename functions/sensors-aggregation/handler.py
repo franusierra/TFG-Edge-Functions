@@ -36,29 +36,21 @@ def handle(req):
     # Create the influxdb local client
     influx_client_local = InfluxDBClient(influx_host_local, influx_port_local, influx_user_local, influx_pass_local, influx_db_local)
 
-    # Count the ammount of blood-oxygen alarms thrown in the last 30 minutes
-    rs=influx_client_local.query(' '.join('SELECT avg("meassured-value"), max("meassured-value"), min("meassured-value"), last("patient-id") ',
-                                        'FROM "alarm" WHERE "type" = \'blood-oxygen\' AND time > \'{}\' - 30m'.format(current_time),
-                                        'GROUP BY "patient-id"')
-    points=list(rs.get_points())
-    blood_oxygen_value=points[0]["count"]
-    
-    # Count the ammount of temperature alarms thrown in the last 30 minutes
-    rs=influx_client_local.query('SELECT count("meassured-value") FROM "alarm" WHERE "type" = \'temperature\' AND time > \'{}\' - 30m'.format(current_time))
-    points=list(rs.get_points())
-    temperature_alarms=points[0]["count"]
+    bo_aggregation=fetchAggregation(influx_client_local,'blood-oxygen',current_time,clinic_name)
+    hb_aggregation=fetchAggregation(influx_client_local,'heartbeat',current_time,clinic_name)
+    t_aggregation=fetchAggregation(influx_client_local,'temperature',current_time,clinic_name)
 
-    # Count the ammount of heartbeat alarms thrown in the last 30 minutes
-    rs=influx_client_local.query('SELECT * FROM "alarm" WHERE time > \'{}\' - 30m'.format(current_time))
-    points=list(map(transformEventPoint,list(rs.get_points())))
-    
     # Create the influxdb cloud aggregation client
     influx_client_cloud = InfluxDBClient(influx_host_cloud, influx_port_cloud, influx_user_cloud, influx_pass_cloud, influx_db_cloud)
     
     # Finally, write the point to the temperature measurement
-    res=influx_client_cloud.write_points(points)
-
-    return res
+    bo_res=influx_client_cloud.write_points(bo_aggregation)
+    hb_res=influx_client_cloud.write_points(hb_aggregation)
+    t_res=influx_client_cloud.write_points(t_aggregation)
+    if bo_res and hb_res and t_res:
+        return "Succesfull aggregation"
+    else:
+        return "Aggregation failed"
 
 def get_file(path):
     v = ""
@@ -66,18 +58,30 @@ def get_file(path):
         v = f.read()
         f.close()
     return v.strip()
-
-
-def transformEventPoint(data):
+def transformAggregation(point,current_time,clinic_name,sensor_type):
+    fields=dict(zip(point['columns'],point['values'][0]))
+    fields.pop('time',None)
     return {
-        "measurement":"alarm",
+        "measurement":sensor_type,
         "tags":{
-           "clinic":data["clinic"]
+            "patient-id":point["tags"]["patient-id"],
+            "clinic":clinic_name
         },
-        "time": data["time"],
-        "fields":{
-            "patient-id":data["patient-id"],
-            "type":data["type"],
-            "meassured-value":float(data["meassured-value"])
-        }
+        "time":current_time,
+        "fields" : fields
     }
+
+def fetchAggregation(influx_client_local,sensor_type,current_time,clinic_name):
+    # Count the ammount of blood-oxygen alarms thrown in the last 30 minutes
+    rs=influx_client_local.query(' '.join(('SELECT mean("value"), max("value"), min("value")',
+                                        'FROM "{}"'.format(sensor_type),
+                                        'WHERE time > \'{}\' - 30m'.format(current_time),
+                                        'GROUP BY "patient-id"')))
+    json_results=rs.raw
+    series=json_results["series"]
+    formatted_points=list()
+    for p in series:
+        formatted_points.append(transformAggregation(p,current_time,clinic_name,sensor_type))
+    return formatted_points
+
+

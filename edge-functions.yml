@@ -68,3 +68,20 @@ functions:
     secrets:
       - influxdb-auth
       - influxdb-cloud-auth
+  sensors-aggregation:
+    lang: python3
+    handler: ./functions/sensors-aggregation
+    image: franusi/sensors-aggregation:latest
+    namespace: tfg-edge
+    environment:
+      clinic_name: "edge-clinic"
+      influx_host_local: "influxdb"
+      influx_port_local: "8086"
+      influx_host_cloud: "cloudaggregation.ddns.net"
+      influx_port_cloud: "8086"
+    annotations: 
+      topic: cron-function
+      schedule: "*/30 * * * *"
+    secrets:
+      - influxdb-auth
+      - influxdb-cloud-auth
